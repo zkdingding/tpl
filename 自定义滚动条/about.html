@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta charset="utf-8"/>
+	<title></title>
+	<style>
+		html,body{height:1200px;}
+		#cont-box{width:800px;height:600px;margin:0 auto;position:relative;overflow:hidden}
+		#cont-box .main{position:absolute;top:0;left:0;width:790px;height:2000px;background:linear-gradient(45deg,red,yellow);}
+		#cont-box .rile{position:absolute;right:0;top:0;width:6px;height:100%;border-radius:3px;background:gray;}
+		#cont-box .but{position:absolute;top:0;left:-2px;width:10px;height:120px;border-radius:5px;background:dodgerblue;cursor:pointer}
+		
+	</style>
+</head>
+
+<body>
+
+<div id="cont-box">
+	<!--滚动条-->
+	<div class="rile">
+		<div class="but"></div>
+	</div>
+	<div class="main">
+		
+	</div>
+</div>
+	
+<script type="text/javascript" src="js/jquery-1.12.3.min.js"></script>
+<script>
+	$(document).ready(function(){
+		var zk_Drag = (function(){
+			//模版方法的设计模式写构造函数 Gfo设计模式(总结的书写构造函数的设计模式)
+			var Drag=function(){
+				this.contbox=$("#cont-box");
+				this.main=$(".main");
+				this.rile=$(".rile");
+				this.but=$(".but");
+				this.size=0;
+				this.Y1=this.rile.height()-this.but.height();
+				this.Y2=this.main.height()-this.contbox.height();
+			}
+			//鼠标按下触发的事件
+			Drag.prototype.mouseDown=function(e){
+				var _this=this;
+				this.but.on("mousedown",function(e){
+					var y=e.pageY-_this.but.position().top
+					$(document).on("mousemove",function(e){
+						var l=e.pageY-y;
+						if(l<0){
+							l=0}else if(l>_this.Y1){
+								l=_this.Y1
+						};
+						_this.size=l/_this.Y1;
+						var num=_this.Y2*_this.size;
+						_this.but.css({top:l+"px"});
+						_this.main.css({top:-num+"px"})
+					}).on("mouseup",function(){
+						$(document).off();
+						e.preventDefault();
+					})
+				})
+			}
+			//鼠标滚轮滚动事件
+			Drag.prototype.mouseWheel=function(e){
+				var _this=this;
+				this.contbox.on("mousewheel",function(e){
+					var flag=true,
+						l=_this.but.position().top;
+					flag=e.originalEvent.wheelDelta?e.originalEvent.wheelDelta<0:e.originalEvent.detail>0;
+					if(!flag){
+						l-=10;
+					}else{
+						l+=10;
+					}
+					if(l<0){
+						l=0}else if(l>_this.Y1){
+						l=_this.Y1
+					};
+					_this.size=l/_this.Y1;
+					var num=_this.Y2*_this.size;
+					_this.but.css({top:l+"px"});
+					_this.main.css({top:-num+"px"})
+					event.preventDefault()
+				})
+			}
+			Drag.prototype.init=function(){
+				this.mouseDown();
+				this.mouseWheel();
+			}
+			
+			var init=function(){
+				new Drag().init()
+			}
+			
+			return {
+				init: init
+			}
+		})()
+		zk_Drag.init()
+	})
+//	var size=0;
+		//拖拽
+//			$(".but").on("mousedown",function(e){
+//				var y=e.pageY-$(".but").position().top;
+//				//console.log(y)
+//				$(document).on("mousemove",function(e){
+//					var l=e.pageY-y;
+//					var e=e||event;
+//					if(l<0){
+//						l=0;
+//					}else if(l>$(".rile").height()-$(".but").height()){
+//						l=$(".rile").height()-$(".but").height();
+//					}
+//					size=l/($(".rile").height()-$(".but").height());
+//					var h=($("#main").height()-$(".container").height())*size
+//					$("#main").css("top",-h+"px")
+//					$(".but").css({"top":l+"px"});
+//					e.preventDefault();
+//				})
+//				$(document).on("mouseup",function(e){
+//					var e=e||event;
+//					$(document).off("mousemove mouseup");
+//					e.preventDefault();
+//				})
+//			})
+//			//滚轮事件
+//			$(".container").on("DOMMouseScroll mousewheel",function(e){
+//				var e=e||event;
+//				var flag=true
+//				flag=e.originalEvent.wheelDelta?e.originalEvent.wheelDelta<0:e.originalEvent.detail>0;
+//				var h= $("#main").position().top;
+//				if(flag){
+//					h=h-10;
+//					if(h<-$("#main").height()+$(".container").height()){
+//						h=-$("#main").height()+$(".container").height()
+//					}
+//				}else{
+//					h=h+10;
+//					if(h>0){
+//						h=0
+//					}
+//				}
+//				$("#main").css("top",h+"px");
+//				size=h/(-$("#main").height()+$(".container").height())
+//				$(".but").css("top",size*($(".rile").height()-$(".but").height())+"px")
+//				e.preventDefault();
+//			})
+</script>
+</body>
+</html>
