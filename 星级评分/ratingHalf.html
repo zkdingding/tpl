@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<style>
+			body,ul,li{
+				padding:0;
+				margin:0
+			}
+			li{
+				list-style-type:none;
+			}
+			.rating{
+				margin:100px auto;
+				height:100px;
+				width:500px
+			}
+			.rating-item{
+				float:left;
+				width:100px;
+				height:100px;
+				background:url(img/greystar.png) no-repeat;
+				cursor:pointer
+			}
+		</style>
+	</head>
+	<body>
+		<ul class="rating" id="rating">
+			<li class="rating-item" title="很差"></li>
+			<li class="rating-item" title="差"></li>
+			<li class="rating-item" title="一般"></li>
+			<li class="rating-item" title="好"></li>
+			<li class="rating-item" title="很好"></li>
+		</ul>
+		<ul class="rating" id="rating2">
+			<li class="rating-item" title="很差"></li>
+			<li class="rating-item" title="差"></li>
+			<li class="rating-item" title="一般"></li>
+			<li class="rating-item" title="好"></li>
+			<li class="rating-item" title="很好"></li>
+		</ul>
+	</body>
+	<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+	<script>
+		$(function(){
+			//模板方法模式实现星级评分
+			var rating = (function(el,options){
+				//继承
+				var extend = function(subClass,supClass){
+					var F=function(){};
+					F.prototype = supClass.prototype;
+					subClass.prototype = new F();
+					subClass.prototype.constructor = subClass;
+				}
+				//点亮
+				var Light = function(el,options){
+					this.$el = $(el);
+					this.$item = this.$el.find(".rating-item");
+					this.opts = options;
+					this.add = 1;
+					this.events = "mouseover";
+				}
+				Light.prototype.init=function(){
+					this.lightOn(this.opts.num);
+					(!this.opts.readOnly) && this.bindEvent();
+				}
+				Light.prototype.lightOn=function(num){
+					var count = parseInt(num),
+						isHalf = count !== num && this.opts.mode === "LightHalf";
+						console.log(isHalf)
+					this.$item.each(function(index){
+						if(index<count){
+							$(this).css("background","url(img/star.png) no-repeat");
+						}else{
+							$(this).css("background","url(img/greystar.png) no-repeat");
+						}
+					});
+					isHalf && this.$item.eq(count).css("background","url(img/halfstar.png) no-repeat");
+				}
+				Light.prototype.bindEvent=function(){
+					var self = this,
+						itemLength = this.$item.size();
+					
+					self.$el.on(self.events,".rating-item",function(e){
+						var $this =$(this),
+							num = 0;
+							console.log($this.get(0))
+						self.select(e,$this);
+						num = $this.index()+self.add;
+						self.lightOn(num);
+						(typeof self.opts.select === "function") && self.opts.select.call(this,num,itemLength);
+					}).on("click",".rating-item",function(){
+						self.opts.num = $(this).index()+self.add;
+						self.opts.oneClick && self.$el.off();
+						(typeof self.opts.chosen === "function") && self.opts.chosen.call(this,self.opts.num,itemLength);
+					})
+				}
+				Light.prototype.select=function($this){
+					throw new Error("子类必须重写此方法")
+				}
+				
+				
+				
+				
+				
+				var LightEntire = function(el,options){
+					Light.call(this,el,options);
+					this.events = "mouseover";
+				}
+				
+				extend(LightEntire,Light);
+				
+				LightEntire.prototype.select=function(){
+					console.log(this.constructor)
+				}
+				
+				
+				
+				
+				
+				var LightHalf = function(el,options){
+					Light.call(this,el,options);
+					this.events = "mousemove";
+				}
+				extend(LightHalf,Light);
+				LightHalf.prototype.select=function(e,$this){
+					if(e.pageX-$this.offset().left<$this.width()/2){
+						this.add = .5;
+					}else{
+						this.add = 1;
+					}
+				}
+				
+				
+				
+				
+				
+				//默认参数
+				var defaults = {
+					mode:"LightEntire",
+					num:0,
+					readOnly:false,
+					oneClick:false,
+					select:function(num,itemLength){
+						console.log(this);
+						console.log(num+"/"+itemLength);
+					},
+					chosen:function(num,itemLength){
+						console.log(this);
+						console.log(num+"/"+itemLength);
+					}
+				}
+				var mode = {
+					"LightEntire":LightEntire,
+					"LightHalf":LightHalf
+				}
+				var init = function(el,options){
+					var options = $.extend({},defaults,options),
+						$el = $(el);
+						rating = $el.data("rating");
+					console.log(options.mode)
+					if(!mode[options.mode]){
+						options.mode = "LightEntire";
+					}
+					console.log(options.mode)
+					if(!rating){
+						$el.data("rating",(rating = new mode[options.mode](el,options)))
+					}
+					rating.init();
+				}
+				$.fn.extend({
+					rating:function(options){
+						return this.each(function(){
+							init(this,options)
+						})
+					}
+				});
+				return {
+					init:init
+				}
+			})()
+//			rating.init(".rating",{
+//				mode:"LightHalf",
+//				num:3.5,
+//				oneClick:true
+//			})
+			$("#rating").rating({
+				mode:"LightHalf",
+				num:3.5,
+				oneClick:false
+			})
+			$("#rating2").rating({
+				mode:"LightEntire",
+				num:4.5,
+				oneClick:true
+			})
+		})
+	</script>
+</html>
